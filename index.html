@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marginalia - 余白に綴るノート</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #F9F9F7;
+            --surface: #FFFFFF;
+            --primary: #7B8F7D;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --radius: 14px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dark-mode {
+            --bg: #1A1C1E;
+            --surface: #252729;
+            --primary: #9DB2A0;
+            --text-main: #E2E2E2;
+            --text-sub: #A0A0A0;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans JP', 'Roboto', sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            transition: background-color var(--transition);
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 414px;
+            height: 100%;
+            background-color: var(--bg);
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color var(--transition);
+        }
+
+        header {
+            padding: 20px 16px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-bar {
+            padding: 0 16px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .nav-item {
+            color: var(--text-sub);
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .nav-sep {
+            color: var(--text-sub);
+            opacity: 0.5;
+        }
+
+        .scrollbox {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px 120px;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            margin: 24px 0 12px;
+            letter-spacing: 0.8px;
+        }
+
+        /* Folder Item */
+        .item-folder {
+            display: flex;
+            align-items: center;
+            padding: 14px 12px;
+            margin: 0 -12px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+
+        .item-folder.drag-over {
+            background-color: rgba(123, 143, 125, 0.15);
+            transform: scale(1.02);
+        }
+
+        .folder-icon {
+            color: var(--primary);
+            font-size: 18px;
+            margin-right: 12px;
+        }
+
+        .folder-name {
+            flex: 1;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .folder-meta {
+            color: var(--text-sub);
+            font-size: 12px;
+        }
+
+        .btn-add-inline {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-top: 8px;
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px dashed rgba(123, 143, 125, 0.3);
+            transition: 0.2s;
+        }
+
+        .btn-add-inline:hover {
+            background: rgba(123, 143, 125, 0.05);
+        }
+
+        /* Swipe to Delete */
+        .swipe-wrapper {
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border-radius: var(--radius);
+            user-select: none;
+        }
+
+        .swipe-delete-bg {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: #ff4d4d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            border-radius: var(--radius);
+            cursor: pointer;
+        }
+
+        .card-note {
+            background-color: var(--surface);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 0;
+            cursor: grab;
+            transition: transform 0.3s cubic-bezier(0.2, 0, 0.3, 1), box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            position: relative;
+            z-index: 2;
+            touch-action: pan-y;
+        }
+
+        .card-note:active {
+            cursor: grabbing;
+        }
+
+        .card-note.dragging {
+            opacity: 0.4;
+            transform: scale(0.95);
+        }
+
+        .note-title {
+            font-weight: 700;
+            font-size: 16px;
+            margin: 0 0 4px;
+            color: var(--text-main);
+        }
+
+        .note-preview {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin: 0 0 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-clamp: 2;
+            overflow: hidden;
+            line-height: 1.5;
+            opacity: 0.8;
+        }
+
+        .note-meta {
+            font-size: 11px;
+            color: var(--text-sub);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 10px;
+        }
+
+        .card-note.drag-over-note {
+            border-top: 3px solid var(--primary);
+            transform: translateY(2px);
+        }
+
+        .tag-small {
+            font-size: 10px;
+            color: var(--primary);
+            background: rgba(123, 143, 125, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Editor Overlay */
+        #editor-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            z-index: 1000;
+            transform: translateY(100%);
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-layer.open {
+            transform: translateY(0);
+        }
+
+        .editor-top {
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .tag-editor-area {
+            padding: 8px 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            align-items: center;
+        }
+
+        .tag-chip {
+            background: rgba(123, 143, 125, 0.1);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag-chip .remove {
+            cursor: pointer;
+            opacity: 0.6;
+            font-size: 14px;
+        }
+
+        .add-tag-btn {
+            font-size: 12px;
+            color: var(--primary);
+            cursor: pointer;
+            border: 1px dashed var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .editor-main {
+            flex: 1;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        #input-title {
+            font-size: 26px;
+            font-weight: 700;
+            border: none;
+            background: none;
+            outline: none;
+            padding: 15px 0;
+            color: var(--text-main);
+            width: 100%;
+        }
+
+        #editor-content {
+            flex: 1;
+            outline: none;
+            padding-bottom: 200px;
+        }
+
+        /* Block Editor */
+        .block {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 4px 0;
+        }
+
+        .block-cb {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            margin-top: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .block-cb.checked {
+            background-color: var(--primary);
+        }
+
+        .block-cb.checked::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+
+        .block-text {
+            flex: 1;
+            outline: none;
+            font-size: 17px;
+            line-height: 1.6;
+            color: var(--text-main);
+            min-height: 1.6em;
+            word-break: break-all;
+            white-space: pre-wrap;
+        }
+
+        .block-text[data-checked="true"] {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .acc-bar {
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            padding: 10px 20px;
+            display: flex;
+            gap: 25px;
+            background-color: var(--bg);
+        }
+
+        .acc-item {
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 20px;
+            user-select: none;
+        }
+
+        .fab-group {
+            position: absolute;
+            bottom: 30px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 20px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 8px 24px rgba(123, 143, 125, 0.4);
+            cursor: pointer;
+        }
+
+        .fab-secondary {
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background-color: var(--surface);
+            color: var(--primary);
+            font-size: 20px;
+            border: 1px solid rgba(123, 143, 125, 0.2);
+        }
+
+        #toast {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: 0.3s;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        /* Modal Design */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--surface);
+            width: 85%;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: modalScale 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        @keyframes modalScale {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-main);
+            margin-bottom: 16px;
+        }
+
+        #modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background: var(--bg);
+            color: var(--text-main);
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+
+        .btn-cancel {
+            background: none;
+            color: var(--text-sub);
+        }
+
+        .btn-confirm {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #FFFFFF;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.1);
+        }
+
+        .splash-logo {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 24px;
+            animation: bounce 2s infinite ease-in-out;
+            object-fit: contain;
+            /* Force the logo background to become transparent against white */
+            filter: brightness(1.05) contrast(1.1);
+            mix-blend-mode: darken;
+        }
+
+        .splash-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 2px;
+            opacity: 0;
+            animation: fadeIn 1s forwards 0.5s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone-frame" id="phone-frame">
+        <div id="splash-screen">
+            <img src="./assets/logo.png" class="splash-logo" alt="Marginalia Logo">
+            <div class="splash-title">Marginalia</div>
+        </div>
+        <header>
+            <h1 id="screen-title">Marginalia</h1>
+            <div style="display: flex;">
+                <button class="btn-icon" onclick="ui.toggleDarkMode()">🌓</button>
+                <button class="btn-icon">⚙️</button>
+            </div>
+        </header>
+        <div class="nav-bar" id="breadcrumbs"></div>
+        <div class="scrollbox" id="home-content"></div>
+
+        <div class="fab-group">
+            <div class="fab" onclick="ui.openEditor()" title="新しいノート">＋</div>
+        </div>
+
+        <div id="toast"></div>
+
+        <!-- NEW: In-app Modal for Folder Creation -->
+        <div class="modal-overlay" id="modal-folder">
+            <div class="modal-box">
+                <div class="modal-title">新しいフォルダ</div>
+                <input type="text" id="modal-input" placeholder="フォルダ名を入力...">
+                <div class="modal-btns">
+                    <button class="btn btn-cancel" onclick="ui.closeModal()">キャンセル</button>
+                    <button class="btn btn-confirm" onclick="ui.submitFolder()">作成</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="editor-layer">
+            <div class="editor-top">
+                <button class="btn-icon" onclick="ui.closeEditor()">‹</button>
+                <button class="btn-icon" onclick="ui.closeEditor()"
+                    style="color: var(--primary); font-weight: 800;">✓</button>
+            </div>
+            <div class="tag-editor-area" id="tag-editor-area"></div>
+            <div class="editor-main">
+                <input type="text" id="input-title" placeholder="タイトル">
+                <div id="editor-content"></div>
+            </div>
+            <div class="acc-bar">
+                <!-- mousedown preventDefault is critical for focus management -->
+                <div class="acc-item" onmousedown="event.preventDefault()" onclick="editor.toggleBlockType('todo')">☑️
+                </div>
+                <div class="acc-item" onmousedown="event.preventDefault()" onclick="editor.insertDate()">🕒</div>
+                <div class="acc-item" onmousedown="event.preventDefault()" onclick="document.execCommand('indent')">⇥
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Initial State ---
+        const state = {
+            folders: [
+                { id: 1, name: '仕事', parent: null },
+                { id: 2, name: '生活', parent: null }
+            ],
+            notes: [
+                { id: 101, title: "📍 Concept", tags: ["Idea"], folder: null, updatedAt: new Date(), content: '<div class="block" data-type="text"><div class="block-text" contenteditable="true">余白を楽しむメモアプリ</div></div>' },
+                { id: 102, title: "買い物", tags: ["Shopping"], folder: null, updatedAt: new Date(), content: '<div class="block" data-type="todo"><div class="block-cb checked"></div><div class="block-text" contenteditable="true" data-checked="true">牛乳</div></div><div class="block" data-type="todo"><div class="block-cb"></div><div class="block-text" contenteditable="true">卵</div></div>' }
+            ],
+            path: [{ id: null, name: "Home" }],
+            isDarkMode: false
+        };
+
+        const ui = {
+            activeNote: null,
+            editingTags: [],
+            swipeState: { startX: 0, currentId: null, distance: 0 },
+
+            toggleDarkMode() {
+                state.isDarkMode = !state.isDarkMode;
+                document.getElementById('phone-frame').classList.toggle('dark-mode', state.isDarkMode);
+            },
+
+            openEditor(noteId = null) {
+                const layer = document.getElementById('editor-layer');
+                const title = document.getElementById('input-title');
+                const content = document.getElementById('editor-content');
+
+                this.editingTags = [];
+                if (noteId) {
+                    const note = state.notes.find(n => n.id === noteId);
+                    title.value = note.title;
+                    content.innerHTML = note.content;
+                    this.editingTags = [...(note.tags || [])];
+                    this.activeNote = note;
+
+                    // Re-init block events
+                    content.querySelectorAll('.block').forEach(b => {
+                        const text = b.querySelector('.block-text');
+                        text.onkeydown = (e) => editor.handleKey(e, b);
+                        const cb = b.querySelector('.block-cb');
+                        if (cb) cb.onclick = () => editor.toggleTodo(b);
+                    });
+                } else {
+                    title.value = '';
+                    content.innerHTML = '';
+                    this.activeNote = null;
+                    this.createBlock('text', '', content);
+                }
+
+                this.renderTagEditor();
+                layer.classList.add('open');
+
+                // Title Enter logic
+                title.onkeydown = (e) => {
+                    if (e.key === 'Enter' && !e.isComposing) {
+                        e.preventDefault();
+                        const first = content.querySelector('.block-text');
+                        if (first) this.setCursorToEnd(first);
+                    }
+                };
+
+                setTimeout(() => {
+                    if (!noteId) {
+                        title.focus();
+                    } else {
+                        const first = content.querySelector('.block-text');
+                        if (first) this.setCursorToEnd(first);
+                    }
+                }, 100);
+            },
+
+            closeEditor() {
+                const title = document.getElementById('input-title').value;
+                const content = document.getElementById('editor-content').innerHTML;
+                const currentFolder = state.path[state.path.length - 1].id;
+
+                if (title || content.replace(/<[^>]*>/g, '').trim()) {
+                    if (this.activeNote) {
+                        this.activeNote.title = title;
+                        this.activeNote.content = content;
+                        this.activeNote.tags = [...this.editingTags];
+                        this.activeNote.updatedAt = new Date();
+                    } else {
+                        state.notes.push({
+                            id: Date.now(),
+                            title,
+                            content,
+                            tags: [...this.editingTags],
+                            folder: currentFolder,
+                            updatedAt: new Date()
+                        });
+                    }
+                }
+                document.getElementById('editor-layer').classList.remove('open');
+                this.renderHome();
+            },
+
+            deleteNote() {
+                if (this.activeNote && confirm('このメモを削除しますか？')) {
+                    state.notes = state.notes.filter(n => n.id !== this.activeNote.id);
+                    this.closeEditor();
+                }
+            },
+
+            addTag() {
+                const tag = prompt('タグ名を入力してください');
+                if (tag && !this.editingTags.includes(tag)) {
+                    this.editingTags.push(tag);
+                    this.renderTagEditor();
+                }
+            },
+
+            removeTag(t) {
+                this.editingTags = this.editingTags.filter(item => item !== t);
+                this.renderTagEditor();
+            },
+
+            renderTagEditor() {
+                const area = document.getElementById('tag-editor-area');
+                area.innerHTML = this.editingTags.map(t => `
+                <div class="tag-chip">#${t} <span class="remove" onclick="ui.removeTag('${t}')">×</span></div>
+            `).join('') + `<div class="add-tag-btn" onclick="ui.addTag()">+ タグ</div>`;
+            },
+
+            createBlock(type = 'text', text = '', container = null, afterEl = null) {
+                const block = document.createElement('div');
+                block.className = 'block';
+                block.dataset.type = type;
+                if (type === 'todo') {
+                    const cb = document.createElement('div');
+                    cb.className = 'block-cb';
+                    cb.onclick = () => editor.toggleTodo(block);
+                    block.appendChild(cb);
+                }
+                const editable = document.createElement('div');
+                editable.className = 'block-text';
+                editable.contentEditable = true;
+                editable.innerText = text;
+                editable.onkeydown = (e) => editor.handleKey(e, block);
+                block.appendChild(editable);
+                if (afterEl) { afterEl.after(block); } else if (container) { container.appendChild(block); }
+                return block;
+            },
+
+            setCursorToEnd(el) {
+                el.focus();
+                const range = document.createRange();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            },
+
+            // --- Drag and Drop Logic ---
+            onDragStart(e, noteId) {
+                e.dataTransfer.setData('noteId', noteId);
+                setTimeout(() => e.target.classList.add('dragging'), 0);
+            },
+            onDragEnd(e) {
+                e.target.classList.remove('dragging');
+            },
+            onDragOver(e) {
+                e.preventDefault();
+                e.currentTarget.classList.add('drag-over');
+                if (e.currentTarget.classList.contains('card-note')) {
+                    e.currentTarget.classList.add('drag-over-note');
+                }
+            },
+            onDragLeave(e) {
+                e.currentTarget.classList.remove('drag-over');
+                e.currentTarget.classList.remove('drag-over-note');
+            },
+            onDrop(e, targetId, isFolder = true) {
+                if (this.swipeState.distance < -10) return; // Prevent drop if swiping
+                e.preventDefault();
+                e.currentTarget.classList.remove('drag-over');
+                e.currentTarget.classList.remove('drag-over-note');
+                const noteId = Number(e.dataTransfer.getData('noteId'));
+                const draggedNote = state.notes.find(n => n.id === noteId);
+
+                if (!draggedNote) return;
+
+                if (isFolder) {
+                    draggedNote.folder = targetId;
+                    this.showToast('フォルダへ移動しました');
+                } else {
+                    // Reorder Note logic
+                    const targetNote = state.notes.find(n => n.id === targetId);
+                    if (draggedNote && targetNote && draggedNote.id !== targetNote.id) {
+                        const fromIndex = state.notes.indexOf(draggedNote);
+                        state.notes.splice(fromIndex, 1);
+                        const toIndex = state.notes.indexOf(targetNote);
+                        state.notes.splice(toIndex, 0, draggedNote);
+                        this.showToast('並び替えました');
+                    }
+                }
+                this.renderHome();
+            },
+
+            // --- Swipe logic ---
+            handleSwipeStart(e, id) {
+                this.swipeState.startX = (e.pageX || (e.touches ? e.touches[0].pageX : 0));
+                this.swipeState.currentId = id;
+                const card = e.currentTarget;
+                card.style.transition = 'none';
+            },
+            handleSwipeMove(e) {
+                if (this.swipeState.currentId === null) return;
+                const x = (e.pageX || (e.touches ? e.touches[0].pageX : 0));
+                const diff = x - this.swipeState.startX;
+                if (diff > 0) return; // Only left swipe
+                this.swipeState.distance = diff;
+                const card = document.querySelector(`.card-note[data-id="${this.swipeState.currentId}"]`);
+                if (card) {
+                    card.style.transform = `translateX(${diff}px)`;
+                }
+            },
+            handleSwipeEnd(e) {
+                const id = this.swipeState.currentId;
+                if (id === null) return;
+                const card = document.querySelector(`.card-note[data-id="${id}"]`);
+                if (!card) return;
+
+                card.style.transition = '';
+                if (this.swipeState.distance < -70) {
+                    card.style.transform = `translateX(-80px)`;
+                } else {
+                    card.style.transform = `translateX(0)`;
+                }
+
+                // Clear state after a small delay to avoid misfires
+                setTimeout(() => {
+                    this.swipeState.currentId = null;
+                    this.swipeState.distance = 0;
+                }, 100);
+            },
+            onDeleteClick(id) {
+                if (confirm('このメモを削除しますか？')) {
+                    state.notes = state.notes.filter(n => n.id !== id);
+                    this.renderHome();
+                    this.showToast('削除しました');
+                } else {
+                    const card = document.querySelector(`.card-note[data-id="${id}"]`);
+                    if (card) card.style.transform = 'translateX(0)';
+                }
+            },
+
+            showToast(msg) {
+                const t = document.getElementById('toast');
+                t.innerText = msg; t.style.opacity = '1';
+                setTimeout(() => t.style.opacity = '0', 2000);
+            },
+
+            createFolder() {
+                const overlay = document.getElementById('modal-folder');
+                const input = document.getElementById('modal-input');
+                input.value = '';
+                input.onkeydown = (e) => {
+                    if (e.key === 'Enter') this.submitFolder();
+                    if (e.key === 'Escape') this.closeModal();
+                };
+                overlay.classList.add('open');
+                setTimeout(() => input.focus(), 100);
+            },
+
+            closeModal() {
+                document.getElementById('modal-folder').classList.remove('open');
+            },
+
+            submitFolder() {
+                const input = document.getElementById('modal-input');
+                const name = input.value.trim();
+                if (name) {
+                    const currentFolder = state.path[state.path.length - 1].id;
+                    state.folders.push({ id: Date.now(), name, parent: currentFolder });
+                    this.renderHome();
+                    this.showToast('フォルダを作成しました');
+                    this.closeModal();
+                }
+            },
+
+            navigate(folderId, folderName) {
+                state.path.push({ id: folderId, name: folderName });
+                this.renderHome();
+            },
+
+            jump(index) {
+                state.path = state.path.slice(0, index + 1);
+                this.renderHome();
+            },
+
+            renderHome() {
+                const home = document.getElementById('home-content');
+                const bread = document.getElementById('breadcrumbs');
+                const currentFolder = state.path[state.path.length - 1].id;
+
+                // Breadcrumbs
+                bread.innerHTML = state.path.map((p, i) => `
+                <span class="nav-item ${i === state.path.length - 1 ? 'active' : ''}" onclick="ui.jump(${i})">${p.name}</span>
+            `).join('<span class="nav-sep">/</span>');
+                document.getElementById('screen-title').innerText = state.path[state.path.length - 1].name;
+
+                let html = '';
+
+                // Folders (Drop Targets)
+                const folders = state.folders.filter(f => f.parent === currentFolder);
+                if (folders.length > 0 || currentFolder === null) {
+                    html += '<div class="label">folders</div>';
+                    folders.forEach(f => {
+                        const count = state.notes.filter(n => n.folder === f.id).length;
+                        html += `
+                        <div class="item-folder" 
+                             ondragover="ui.onDragOver(event)" 
+                             ondragleave="ui.onDragLeave(event)" 
+                             ondrop="ui.onDrop(event, ${f.id})"
+                             onclick="ui.navigate(${f.id}, '${f.name}')">
+                            <span class="folder-icon">📁</span>
+                            <span class="folder-name">${f.name}</span>
+                            <span class="folder-meta">${count}</span>
+                        </div>
+                    `;
+                    });
+                    // Inline Add Folder Button
+                    html += `
+                        <div class="btn-add-inline" onclick="ui.createFolder()">
+                            <span style="margin-right: 8px;">＋</span> フォルダを作成
+                        </div>
+                    `;
+                }
+
+                // Notes (Drag & Reorder)
+                const notes = state.notes.filter(n => n.folder === currentFolder);
+                if (notes.length > 0) {
+                    html += '<div class="label">notes</div>';
+                    notes.forEach(n => {
+                        const date = n.updatedAt ? new Date(n.updatedAt) : new Date();
+                        const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+                        // Strip HTML and get first bit of text for preview
+                        const previewText = n.content.replace(/<[^>]*>/g, ' ').trim();
+
+                        html += `
+                        <div class="swipe-wrapper" 
+                             onmousemove="ui.handleSwipeMove(event)" 
+                             ontouchmove="ui.handleSwipeMove(event)"
+                             onmouseup="ui.handleSwipeEnd(event)" 
+                             ontouchend="ui.handleSwipeEnd(event)">
+                            <div class="swipe-delete-bg" onclick="ui.onDeleteClick(${n.id})">削除</div>
+                            <div class="card-note" 
+                                 data-id="${n.id}"
+                                 draggable="true" 
+                                 onmousedown="ui.handleSwipeStart(event, ${n.id})"
+                                 ontouchstart="ui.handleSwipeStart(event, ${n.id})"
+                                 ondragstart="ui.onDragStart(event, ${n.id})" 
+                                 ondragend="ui.onDragEnd(event)"
+                                 ondragover="ui.onDragOver(event)"
+                                 ondragleave="ui.onDragLeave(event)"
+                                 ondrop="ui.onDrop(event, ${n.id}, false)"
+                                 onclick="if(Math.abs(ui.swipeState.distance) < 5) ui.openEditor(${n.id})">
+                                <div class="note-title">${n.title || '無題'}</div>
+                                <div class="note-preview">${previewText || '（内容なし）'}</div>
+                                <div class="note-meta">
+                                    <span>${timeStr}</span>
+                                    <div class="card-tags">${(n.tags || []).map(t => `<span class="tag-small">#${t}</span>`).join('')}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    });
+                }
+
+                home.innerHTML = html;
+            }
+        };
+
+        const editor = {
+            toggleTodo(block) {
+                const cb = block.querySelector('.block-cb');
+                const text = block.querySelector('.block-text');
+                cb.classList.toggle('checked');
+                if (cb.classList.contains('checked')) { text.setAttribute('data-checked', 'true'); } else { text.removeAttribute('data-checked'); }
+            },
+            toggleBlockType(type) {
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return;
+                const textEl = sel.getRangeAt(0).startContainer.parentElement?.closest('.block-text') || sel.getRangeAt(0).startContainer.closest?.('.block-text');
+                if (!textEl) return;
+                const block = textEl.parentElement;
+                if (block.dataset.type === type) {
+                    block.dataset.type = 'text';
+                    const cb = block.querySelector('.block-cb');
+                    if (cb) cb.remove();
+                    textEl.removeAttribute('data-checked');
+                } else {
+                    block.dataset.type = type;
+                    if (type === 'todo' && !block.querySelector('.block-cb')) {
+                        const cb = document.createElement('div');
+                        cb.className = 'block-cb';
+                        cb.onclick = () => this.toggleTodo(block);
+                        block.prepend(cb);
+                    }
+                }
+            },
+            insertDate() {
+                const now = new Date();
+                const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')} `;
+                document.execCommand('insertText', false, time);
+            },
+            handleKey(e, block) {
+                // IME Composition Check
+                if (e.isComposing) return;
+
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const textEl = block.querySelector('.block-text');
+                    const sel = window.getSelection();
+                    if (!sel.rangeCount) return;
+                    const range = sel.getRangeAt(0);
+
+                    // Notion Logic: Enter on empty todo -> convert to text
+                    if (block.dataset.type === 'todo' && textEl.innerText.trim() === '') {
+                        this.toggleBlockType('todo');
+                        return;
+                    }
+
+                    // Correct splitting of content
+                    const nextBlock = ui.createBlock(block.dataset.type);
+                    const nextTextEl = nextBlock.querySelector('.block-text');
+
+                    const splitRange = range.cloneRange();
+                    splitRange.selectNodeContents(textEl);
+                    splitRange.setStart(range.endContainer, range.endOffset);
+                    const fragment = splitRange.extractContents();
+
+                    nextTextEl.innerHTML = '';
+                    nextTextEl.appendChild(fragment);
+
+                    block.after(nextBlock);
+                    nextTextEl.focus();
+
+                    // Set cursor to start of new block
+                    const newRange = document.createRange();
+                    newRange.setStart(nextTextEl, 0);
+                    newRange.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                }
+                if (e.key === 'Backspace') {
+                    const textEl = block.querySelector('.block-text');
+                    const sel = window.getSelection();
+                    const range = sel.getRangeAt(0);
+                    if (range.startOffset === 0 && range.endOffset === 0) {
+                        if (block.dataset.type === 'todo') {
+                            e.preventDefault();
+                            this.toggleBlockType('todo');
+                        } else if (block.previousElementSibling) {
+                            e.preventDefault();
+                            const prev = block.previousElementSibling;
+                            const prevText = prev.querySelector('.block-text');
+                            const prevLen = prevText.childNodes.length;
+                            while (textEl.firstChild) { prevText.appendChild(textEl.firstChild); }
+                            block.remove();
+                            prevText.focus();
+                            // Maintain correct cursor position after merge
+                            const newRange = document.createRange();
+                            const target = prevText.childNodes[prevLen] || prevText;
+                            newRange.setStart(target, 0);
+                            newRange.collapse(true);
+                            sel.removeAllRanges();
+                            sel.addRange(newRange);
+                        }
+                    }
+                }
+            }
+        };
+
+        ui.renderHome();
+
+        // Splash screen transition
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('splash-screen').classList.add('fade-out');
+            }, 2000);
+        });
+    </script>
+
+</body>
+
+</html>
