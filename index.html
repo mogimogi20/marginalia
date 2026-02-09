@@ -976,22 +976,26 @@
             },
 
             saveData() {
-                localStorage.setItem('marginalia_state', JSON.stringify({
-                    folders: state.folders,
-                    notes: state.notes,
-                    isDarkMode: state.isDarkMode
-                }));
+                try {
+                    localStorage.setItem('marginalia_state', JSON.stringify({
+                        folders: state.folders,
+                        notes: state.notes,
+                        isDarkMode: state.isDarkMode
+                    }));
+                } catch (e) { console.warn("Storage save failed", e); }
             },
 
             loadData() {
-                const saved = localStorage.getItem('marginalia_state');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    state.folders = data.folders || state.folders;
-                    state.notes = data.notes || state.notes;
-                    state.isDarkMode = data.isDarkMode || false;
-                    document.getElementById('phone-frame').classList.toggle('dark-mode', state.isDarkMode);
-                }
+                try {
+                    const saved = localStorage.getItem('marginalia_state');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        state.folders = data.folders || state.folders;
+                        state.notes = data.notes || state.notes;
+                        state.isDarkMode = data.isDarkMode || false;
+                        document.getElementById('phone-frame').classList.toggle('dark-mode', state.isDarkMode);
+                    }
+                } catch (e) { console.warn("Storage load failed", e); }
             },
 
             navigate(folderId, folderName) {
@@ -1192,12 +1196,23 @@
         ui.loadData();
         ui.renderHome();
 
-        // Splash screen transition
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                document.getElementById('splash-screen').classList.add('fade-out');
-            }, 2000);
-        });
+        // Improved Splash screen transition
+        // Fades out after 2 seconds OR when page is fully loaded, with a fallback
+        const splash = document.getElementById('splash-screen');
+        const triggerFade = () => {
+            if (!splash.classList.contains('fade-out')) {
+                splash.classList.add('fade-out');
+            }
+        };
+
+        // Safety fallback: always fade out after 3.5 seconds
+        setTimeout(triggerFade, 3500);
+
+        // Standard timing: 2 seconds after script runs
+        setTimeout(triggerFade, 2000);
+
+        // If load event happens earlier, we can't really "speed it up" but we ensure it works
+        window.addEventListener('load', triggerFade);
     </script>
 
 </body>
